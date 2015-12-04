@@ -16,6 +16,8 @@
         "serve-favicon": "~2.2.0",
         "config": "latest",
         "kue": "latest",
-        "request": "latest"
+        "request": "latest",
+        "spark": "latest",
+        "lodash": "latest"
     }
 }
