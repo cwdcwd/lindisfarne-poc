@@ -35,7 +35,7 @@ router.get('/', function(req, res, next) {
 
 module.exports = router;
 
-
+//?token=WLCnIFkSWh5y29AbQw5vEymF&team_id=T03LNH8MS&team_domain=tcca&channel_id=D03LQAFV8&channel_name=directmessage&user_id=U03LQAFUA&user_name=lazybaer&command=%2Flindisfarne&text=testing+send&response_url=https%3A%2F%2Fhooks.slack.com%2Fcommands%2FT03LNH8MS%2F15950048273%2F0ap3spXIDfod2aiYGlZThW2i
 /*
 token=WLCnIFkSWh5y29AbQw5vEymF
 team_id=T0001
