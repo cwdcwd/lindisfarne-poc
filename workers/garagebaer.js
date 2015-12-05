@@ -36,7 +36,9 @@ GarageBaerWorker.prototype.process = function(slackData, cb) {
             cb(err, data);
         });
     } else if ((slackData.text === 'open') || (slackData.text === 'close')) {
-        self.spark.callFunction(self.deviceId, 'openDoor', null, function(err, data) {
+        var funcName = (slackData.text === 'open') ? 'openDoor' : 'closeDoor';
+
+        self.spark.callFunction(self.deviceId, funcName, null, function(err, data) {
             console.log(data);
             if (err) {
 
