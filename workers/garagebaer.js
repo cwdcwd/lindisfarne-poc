@@ -22,7 +22,9 @@ var GarageBaerWorker = function(username, password, deviceId, whitelist) {
 
 GarageBaerWorker.prototype.process = function(slackData, cb) {
     var self = this;
-    console.log(self);
+    if(_.find(slackData.user_name.toUpperCase()),function(s){
+        
+    }
 
     if (slackData.text === 'state') {
         self.spark.getVariable(self.deviceId, 'state', function(err, data) {
