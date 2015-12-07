@@ -1,5 +1,6 @@
 'use strict';
 
+var _ = require('lodash');
 var config = require('config');
 var Spark = require('spark');
 
@@ -22,7 +23,14 @@ var GarageBaerWorker = function(username, password, deviceId, whitelist) {
 
 GarageBaerWorker.prototype.process = function(slackData, cb) {
     var self = this;
-    console.log(self);
+
+    if ((self.whitelist.length > 0) && !_.find(self.whitelist, function(s) {
+            return s.toUpperCase() === slackData.user_name.toUpperCase();
+        })) {
+        cb(null, 'Sorry ' + slackData.user_name + ' you are not allowed to do that!');
+        return;
+    }
+
 
     if (slackData.text === 'state') {
         self.spark.getVariable(self.deviceId, 'state', function(err, data) {
@@ -36,7 +44,9 @@ GarageBaerWorker.prototype.process = function(slackData, cb) {
             cb(err, data);
         });
     } else if ((slackData.text === 'open') || (slackData.text === 'close')) {
-        self.spark.callFunction(self.deviceId, 'openDoor', null, function(err, data) {
+        var funcName = (slackData.text === 'open') ? 'openDoor' : 'closeDoor';
+
+        self.spark.callFunction(self.deviceId, funcName, null, function(err, data) {
             console.log(data);
             if (err) {
 
