@@ -4,7 +4,28 @@ var _ = require('lodash');
 var config = require('config');
 var kue = require('kue');
 var GarageBaerWorker = require('./workers/garagebaer');
-var baer = new GarageBaerWorker(config.PHOTON_USERNAME, config.PHOTON_PASSWORD, config.PHOTON_DEVICEID);
+
+
+var normalizeWhitelist = function(wl) {
+    var a = wl || [];
+
+    if (_.isString(a)) {
+        console.log('evaluating WHITELIST var', wl);
+        a = eval(wl);
+
+        if (!_.isArray(a)) {
+            console.log('converting WHITELIST to array')
+            a = [].push(wl);
+        }
+    }
+
+    console.log('WHITELIST: ', a);
+    return a;
+};
+
+
+var baer = new GarageBaerWorker(config.PHOTON_USERNAME, config.PHOTON_PASSWORD, config.PHOTON_DEVICEID,
+    normalizeWhitelist(config.WHITELIST));
 var request = require('request');
 var qs = require('querystring');
 var queue = kue.createQueue({
