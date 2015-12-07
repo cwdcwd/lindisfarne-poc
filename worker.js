@@ -6,8 +6,8 @@ var kue = require('kue');
 var GarageBaerWorker = require('./workers/garagebaer');
 
 
-var normalizeWhitelist=function(wl){
-    var a = wl;
+var normalizeWhitelist = function(wl) {
+    var a = wl || [];
 
     if (_.isString(a)) {
         console.log('evaluating WHITELIST var', wl);
@@ -24,7 +24,8 @@ var normalizeWhitelist=function(wl){
 };
 
 
-var baer = new GarageBaerWorker(config.PHOTON_USERNAME, config.PHOTON_PASSWORD, config.PHOTON_DEVICEID,normalizeWhitelist(config.WHITELIST));
+var baer = new GarageBaerWorker(config.PHOTON_USERNAME, config.PHOTON_PASSWORD, config.PHOTON_DEVICEID,
+    normalizeWhitelist(config.WHITELIST));
 var request = require('request');
 var qs = require('querystring');
 var queue = kue.createQueue({
