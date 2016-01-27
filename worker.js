@@ -57,12 +57,6 @@ queue.process('slackpost', function(job, done) {
     jobData.processedDate = new Date();
     console.log(jobData);
 
-    User.find({
-        'slack.id': jobData.user_id
-    }, function() {
-
-    });
-
     var cmdMap = [{
             command: '/garagebaer',
             processor: function(jd, cb) {
@@ -76,7 +70,19 @@ queue.process('slackpost', function(job, done) {
         }, {
             command: '/sfdc',
             processor: function(jd, cb) {
-                sfdc
+                User.find({
+                    'slack.id': jd.user_id
+                }, function(err, user) {
+                    sfdc.connect(user, function(err, oauth) {
+                        if (err) {
+                            cb(null,
+                                'An error occurred while connecting as your SFDC User' +
+                                err);
+                        } else {
+                            sfdc.process(oauth, slackData, cb);
+                        }
+                    });
+                });
             }
         }
     }];
