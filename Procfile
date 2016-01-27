@@ -1,2 +1,2 @@
 web.1: npm start
-worker: npm run-script startWorker 
+worker.1: npm run-script startWorker 

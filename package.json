@@ -18,6 +18,12 @@
         "kue": "latest",
         "request": "latest",
         "spark": "latest",
-        "lodash": "latest"
+        "lodash": "latest",
+        "nforce": "latest",
+        "mongoose": "latest",
+        "express-session": "latest",
+        "passport": "latest",
+        "passport-slack": "latest",
+        "mongoose-findorcreate": "latest"
     }
 }
