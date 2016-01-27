@@ -35,22 +35,7 @@ var UserSchema = new Schema({
         }
     },
     sfdc: {
-        id: {
-            type: String,
-            trim: true
-        },
-        name: {
-            type: String,
-            trim: true
-        },
-        accessToken: {
-            type: String,
-            trim: true
-        },
-        refreshToken: {
-            type: String,
-            trim: true
-        }
+        type: Schema.Types.Mixed
     },
     createdDate: {
         type: Date,

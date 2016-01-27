@@ -14,7 +14,8 @@ var org = nforce.createConnection({
 	redirectUri: 'http://localhost:3000/sfdc/oauth_callback',
 	apiVersion: 'v35.0', // optional, defaults to current salesforce API version
 	environment: 'production', // optional, salesforce 'sandbox' or 'production', production default
-	mode: 'multi' // optional, 'single' or 'multi' user mode, multi default
+	mode: 'multi', // optional, 'single' or 'multi' user mode, multi default
+	autoRefresh: true
 });
 
 router.get('/oauth', function(req, res) {
@@ -31,14 +32,14 @@ router.get('/oauth_callback', function(req, res) {
 		code: req.query.code
 	}, function(err, resp) {
 		if (!err) {
-			console.log(resp);
 			console.log('Access Token: ' + resp.access_token);
 			console.log('saving for user: ', req.session.userId)
 				//save SFDC details to user here
 			User.findOneAndUpdate({
 					_id: req.session.userId
 				}, {
-					'sfdc.accessToken': resp.access_token
+					//'sfdc.accessToken': resp.access_token
+					sfdc: resp
 				},
 				function(err, doc) {
 					if (err) {
@@ -57,6 +58,31 @@ router.get('/oauth_callback', function(req, res) {
 			res.redirect('/fail');
 		}
 	});
+});
+
+router.get('/identity', function(req, res) {
+	if (!req.session.userId) {
+		res.redirect('/slack/oauth');
+	} else {
+		User.findOne({
+			_id: req.session.userId
+		}, function(err, user) {
+			if (err) {
+				res.redirect('/sfdc/oauth');
+			} else {
+				org.getIdentity({
+					oauth: user.sfdc
+				}, function(err, sfdcRes) {
+					if (err) {
+						res.status(500).json(err);
+					} else {
+						console.log(res);
+						res.json(sfdcRes);
+					}
+				});
+			}
+		});
+	}
 });
 
 module.exports = router;

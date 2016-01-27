@@ -1,3 +1,11 @@
 <h1>{{user.name}}</h1>
-<p>slack: {{user.slack.name}} : {{user.slack.accessToken}}</p>
-<p>sfdc: {{user.sfdc.name}} : {{user.sfdc.accessToken}}</p>
+<p><a href="/slack/oauth">slack</a>: {{user.slack.name}} :
+    {{#if user.slack.accessToken}} {{user.slack.accessToken}}
+    {{else}}
+    <a href="/slack/oauth">authorize access to slack</a>
+    {{/if}}</p>
+<p><a href="/sfdc/oauth">sfdc</a>: {{user.sfdc.name}} :
+    {{#if user.slack.accessToken}} {{user.sfdc.access_token}}
+    {{else}}
+    <a href="/sfdc/oauth">authorize access to sfdc</a>
+    {{/if}}</p>
