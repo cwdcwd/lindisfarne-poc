@@ -9,7 +9,7 @@ var SFDCWorker = require('./workers/sfdc');
 var mongoose = require('mongoose');
 var User = require('./model/User.js');
 
-ongoose.connect(config.db);
+mongoose.connect(config.db);
 
 mongoose.connection.on('connected', function() {
         console.log('connected to mongo db: ' + config.db);
@@ -58,59 +58,56 @@ queue.process('slackpost', function(job, done) {
     console.log(jobData);
 
     var cmdMap = [{
-            command: '/garagebaer',
-            processor: function(jd, cb) {
-                baer.process(jd, cb);
-            }
-        }, {
-            command: '/lindisfarne',
-            processor: function(data, cb) {
-                cb(null, data);
-            }
-        }, {
-            command: '/sfdc',
-            processor: function(jd, cb) {
-                User.find({
-                    'slack.id': jd.user_id
-                }, function(err, user) {
-                    sfdc.connect(user, function(err, oauth) {
-                        if (err) {
-                            cb(null,
-                                'An error occurred while connecting as your SFDC User' +
-                                err);
-                        } else {
-                            sfdc.process(oauth, slackData, cb);
-                        }
-                    });
-                });
-            }
+        command: '/garagebaer',
+        processor: function(jd, cb) {
+            baer.process(jd, cb);
+        }
+    }, {
+        command: '/lindisfarne',
+        processor: function(data, cb) {
+            cb(null, data);
+        }
+    }, {
+        command: '/sfdc',
+        processor: function(jd, cb) {
+            sfdc.process(jd, cb);
+        }
+    }, {
+        command: '/chatter',
+        processor: function(jd, cb) {
+            sfdc.process(jd, cb);
+        }
+    }, {
+        command: '/case',
+        processor: function(jd, cb) {
+            sfdc.process(jd, cb);
         }
     }];
 
-var cmd = _.find(cmdMap, {
-    command: jobData.command
-});
+    var cmd = _.find(cmdMap, {
+        command: jobData.command
+    });
 
-if (!cmd) {
-    cmd = _.find(cmdMap, {
-        command: '/lindisfarne'
-    }); //CWD-- default to '/lindisfarne'
-}
+    if (!cmd) {
+        cmd = _.find(cmdMap, {
+            command: '/lindisfarne'
+        }); //CWD-- default to '/lindisfarne'
+    }
 
-cmd.processor(jobData, function(err, data) {
-    var payload = {
-        token: config.SLACKBOT_TOKEN,
-        channel: jobData.channel_id,
-        text: JSON.stringify(err || data)
-    };
+    cmd.processor(jobData, function(err, data) {
+        var payload = { //CWD-- TODO : rework all this to dynamicaly goto channel or DM based on processor
+            token: config.SLACKBOT_TOKEN,
+            channel: jobData.channel_id,
+            text: JSON.stringify(err || data)
+        };
 
-    request({
-        method: 'GET',
-        url: 'https://slack.com/api/chat.postMessage?' + qs.stringify(payload)
-    }, function(error, response, body) {
-        console.log(error, body);
-        done(error, body);
-    })
-});
+        request({
+            method: 'GET',
+            url: 'https://slack.com/api/chat.postMessage?' + qs.stringify(payload)
+        }, function(error, response, body) {
+            console.log(error, body);
+            done(error, body);
+        })
+    });
 
 });

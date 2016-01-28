@@ -19,11 +19,12 @@
         "request": "latest",
         "spark": "latest",
         "lodash": "latest",
-        "nforce": "latest",
+        "nforce": "~1.3.3",
+        "nforce-chatter": "~0.0.1",
         "mongoose": "latest",
         "express-session": "latest",
         "passport": "latest",
-        "passport-slack": "latest",
-        "mongoose-findorcreate": "latest"
+        "passport-slack": "~0.0.4",
+        "mongoose-findorcreate": "~0.1.2"
     }
 }
