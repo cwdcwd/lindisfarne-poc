@@ -68,7 +68,7 @@ queue.process('slackpost', function(job, done) {
             cb(null, data);
         }
     }, {
-        command: '/sfdc',
+        command: '/soql',
         processor: function(jd, cb) {
             sfdc.process(jd, cb);
         }
