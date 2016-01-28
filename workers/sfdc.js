@@ -46,9 +46,9 @@ SFDCWorker.prototype.case = function(user, slackData, cb) {
     caseObj.set('Description', slackData.text);
 
     console.log('creating  case with ' + slackData.text);
-    org.insert({
+    self.org.insert({
         sobject: caseObj,
-        oauth: oauth
+        oauth: user.sfdc
     }, cb);
 }
 
