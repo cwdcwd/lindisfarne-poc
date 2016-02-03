@@ -110,7 +110,8 @@ app.get('/slack/oauth_callback',
         // Successful authentication, redirect time.
         var account = req.account;
         req.session.userId = account._id;
-        res.redirect('/whoami');
+        var url = req.session.landingPage || '/whoami';
+        res.redirect(url);
     });
 
 // catch 404 and forward to error handler

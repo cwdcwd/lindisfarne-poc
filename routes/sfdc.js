@@ -20,8 +20,10 @@ var org = nforce.createConnection({
 
 router.get('/oauth', function(req, res) {
 	if (!req.session.userId) {
+		req.session.landingPage = '/sfdc/oauth';
 		res.redirect('/slack/oauth');
 	} else {
+		req.session.landingPage = null;
 		res.redirect(org.getAuthUri());
 	}
 });
