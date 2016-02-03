@@ -2,6 +2,8 @@
 
 var config = {};
 
+config.BOTNAME = process.env.BOTNAME || 'Lindisfarne Bot';
+config.APPURL = process.env.APPURL || 'http://localhost:3000';
 config.REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
 config.SLACKBOT_TOKEN = process.env.SLACKBOT_TOKEN || '';
 config.PHOTON_USERNAME = process.env.PHOTON_USERNAME || '';

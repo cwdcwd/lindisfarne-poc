@@ -27,7 +27,12 @@ SFDCWorker.prototype.chatter = function(user, slackData, cb) {
         oauth: user.sfdc,
         id: id,
         text: slackData.text
-    }, cb);
+    }, function(e, c) {
+        cb(e, {
+            channel_id: user.slack.id,
+            msg: c
+        })
+    });
 }
 
 SFDCWorker.prototype.soql = function(user, slackData, cb) {
@@ -37,7 +42,49 @@ SFDCWorker.prototype.soql = function(user, slackData, cb) {
     self.org.query({
         oauth: user.sfdc,
         query: slackData.text
-    }, cb);
+    }, function(e, c) {
+        //console.log(c);
+        var att = [];
+
+        _.forEach(c.records, function(r) {
+            console.log(r);
+            var a = {
+                'pretext': r.attributes.type,
+                'title': r.attributes.type,
+                'mrkdwn_in': ['text', 'pretext']
+            };
+
+            _.mapKeys(r._fields, function(v, k) {
+                a.text = '*' + k + '*: ' + v + '\n' + a.text;
+                //                a.fallback = k + ': ' + v;
+            });
+
+            att[att.length] = a;
+        });
+
+        cb(e, {
+            channel_id: user.slack.id,
+            msg: slackData.text,
+            attachments: JSON.stringify(att)
+        })
+    });
+}
+
+SFDCWorker.prototype.timecard = function(user, slackData, cb) {
+    var self = this;
+    var caseObj = nforce.createSObject('Case');
+    caseObj.set('Description', slackData.text);
+
+    console.log('creating  case with ' + slackData.text);
+    self.org.insert({
+        sobject: caseObj,
+        oauth: user.sfdc
+    }, function(e, c) {
+        cb(e, {
+            channel_id: user.slack.id,
+            msg: c
+        })
+    });
 }
 
 SFDCWorker.prototype.case = function(user, slackData, cb) {
@@ -74,15 +121,19 @@ SFDCWorker.prototype.process = function(slackData, cb) {
     }, function(err, user) {
         if (err) {
             console.log(err);
-            cb(null,
-                'Cannot find a SFDC User for that Slack user(' + slackData.user_id + '): ' +
-                err);
+            cb(null, {
+                msg: 'An error occured for that Slack user(' + slackData.user_id + '): ' +
+                    err
+            });
         } else {
-            console.log('processing SFDC command for ', user);
-            if (user.sfdc) {
+            console.log(user);
 
+            if (user && user.sfdc) {
+                console.log('processing SFDC command for ', user);
                 if (slackData.command == '/chatter') {
                     self.chatter(user, slackData, cb);
+                } else if (slackData.command == '/timecard') {
+                    self.timecard(user, slackData, cb);
                 } else if (slackData.command == '/case') {
                     self.case(user, slackData, cb);
                 } else if (slackData.command == '/soql') {
@@ -91,9 +142,12 @@ SFDCWorker.prototype.process = function(slackData, cb) {
                     self.identity(user, slackData, cb);
                 }
             } else {
-                cb(null,
-                    'No SFDC oAuth for that slack user(' + slackData.user_id +
-                    '). please auth. [insert auth URL here]');
+                console.log('no SFDC user found for that slack user: ', slackData.user_id);
+                cb(null, {
+                    channel_id: slackData.user_id,
+                    msg: 'No SFDC oAuth for that slack user(' + slackData.user_id +
+                        '). please auth. ' + config.APPURL + '/sfdc/oauth'
+                });
             }
         }
     });

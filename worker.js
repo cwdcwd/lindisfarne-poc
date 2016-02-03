@@ -82,6 +82,11 @@ queue.process('slackpost', function(job, done) {
         processor: function(jd, cb) {
             sfdc.process(jd, cb);
         }
+    }, {
+        command: '/timecard',
+        processor: function(jd, cb) {
+            sfdc.process(jd, cb);
+        }
     }];
 
     var cmd = _.find(cmdMap, {
@@ -97,13 +102,16 @@ queue.process('slackpost', function(job, done) {
     cmd.processor(jobData, function(err, data) {
         var payload = { //CWD-- TODO : rework all this to dynamicaly goto channel or DM based on processor
             token: config.SLACKBOT_TOKEN,
-            channel: jobData.channel_id,
-            text: JSON.stringify(err || data)
+            channel: data.channel_id || jobData.channel_id,
+            text: JSON.stringify(err || data.msg || data),
+            attachments: data.attachments || null,
+            username: config.BOTNAME
         };
 
         request({
-            method: 'GET',
-            url: 'https://slack.com/api/chat.postMessage?' + qs.stringify(payload)
+            method: 'POST',
+            url: 'https://slack.com/api/chat.postMessage',
+            form: payload
         }, function(error, response, body) {
             console.log(error, body);
             done(error, body);
