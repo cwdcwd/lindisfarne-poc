@@ -27,7 +27,9 @@ GarageBaerWorker.prototype.process = function(slackData, cb) {
     if ((self.whitelist.length > 0) && !_.find(self.whitelist, function(s) {
             return s.toUpperCase() === slackData.user_name.toUpperCase();
         })) {
-        cb(null, 'Sorry ' + slackData.user_name + ' you are not allowed to do that!');
+        cb(null, {
+            msg: 'Sorry ' + slackData.user_name + ' you are not allowed to do that!'
+        });
         return;
     }
 
@@ -41,7 +43,9 @@ GarageBaerWorker.prototype.process = function(slackData, cb) {
                 data = 'State is currently: ' + interpretState(data.result);
             }
 
-            cb(err, data);
+            cb(err, {
+                msg: data
+            });
         });
     } else if ((slackData.text === 'open') || (slackData.text === 'close')) {
         var funcName = (slackData.text === 'open') ? 'openDoor' : 'closeDoor';
@@ -54,7 +58,9 @@ GarageBaerWorker.prototype.process = function(slackData, cb) {
                 data = 'Ok I did just that. The Door State is currently: ' + interpretState(data.return_value);
             }
 
-            cb(err, data);
+            cb(err, {
+                msg: data
+            });
         });
     } else {
         cb('I really am not sure what you are on about');
