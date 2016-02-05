@@ -4,7 +4,26 @@ var _ = require('lodash');
 var config = require('config');
 var kue = require('kue');
 var GarageBaerWorker = require('./workers/garagebaer');
+var SFDCWorker = require('./workers/sfdc');
 
+var mongoose = require('mongoose');
+var User = require('./model/User.js');
+
+mongoose.connect(config.db);
+
+mongoose.connection.on('connected', function() {
+        console.log('connected to mongo db: ' + config.db);
+    })
+    .on('disconnected', function(err) {
+        console.log('disconnected');
+    })
+    .on('error', function(err) {
+        console.log('could not connect to mongo db: ', err);
+        console.error.bind(console, 'connection error:');
+    })
+    .once('open', function(callback) {
+        console.log('db opened: ', mongoose.connection.host + ':' + mongoose.connection.port);
+    });
 
 var normalizeWhitelist = function(wl) {
     var a = wl || [];
@@ -26,6 +45,7 @@ var normalizeWhitelist = function(wl) {
 
 var baer = new GarageBaerWorker(config.PHOTON_USERNAME, config.PHOTON_PASSWORD, config.PHOTON_DEVICEID,
     normalizeWhitelist(config.WHITELIST));
+var sfdc = new SFDCWorker();
 var request = require('request');
 var qs = require('querystring');
 var queue = kue.createQueue({
@@ -47,6 +67,26 @@ queue.process('slackpost', function(job, done) {
         processor: function(data, cb) {
             cb(null, data);
         }
+    }, {
+        command: '/soql',
+        processor: function(jd, cb) {
+            sfdc.process(jd, cb);
+        }
+    }, {
+        command: '/chatter',
+        processor: function(jd, cb) {
+            sfdc.process(jd, cb);
+        }
+    }, {
+        command: '/case',
+        processor: function(jd, cb) {
+            sfdc.process(jd, cb);
+        }
+    }, {
+        command: '/timecard',
+        processor: function(jd, cb) {
+            sfdc.process(jd, cb);
+        }
     }];
 
     var cmd = _.find(cmdMap, {
@@ -60,15 +100,18 @@ queue.process('slackpost', function(job, done) {
     }
 
     cmd.processor(jobData, function(err, data) {
-        var payload = {
+        var payload = { //CWD-- TODO : rework all this to dynamicaly goto channel or DM based on processor
             token: config.SLACKBOT_TOKEN,
-            channel: jobData.channel_id,
-            text: JSON.stringify(err || data)
+            channel: (data && data.channel_id) || jobData.channel_id,
+            text: JSON.stringify(err || data.msg || data),
+            attachments: (data && data.attachments) || null,
+            username: config.BOTNAME
         };
 
         request({
-            method: 'GET',
-            url: 'https://slack.com/api/chat.postMessage?' + qs.stringify(payload)
+            method: 'POST',
+            url: 'https://slack.com/api/chat.postMessage',
+            form: payload
         }, function(error, response, body) {
             console.log(error, body);
             done(error, body);
