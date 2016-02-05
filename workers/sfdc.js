@@ -10,12 +10,18 @@ var SFDCWorker = function() {
     this.org = nforce.createConnection({
         clientId: config.SFDC_KEY,
         clientSecret: config.SFDC_PASS,
-        redirectUri: 'http://localhost:3000/sfdc/oauth_callback',
+        redirectUri: config.APPURL + '/sfdc/oauth_callback',
         apiVersion: 'v35.0', // optional, defaults to current salesforce API version
         environment: 'production', // optional, salesforce 'sandbox' or 'production', production default
         mode: 'multi', // optional, 'single' or 'multi' user mode, multi default
         autoRefresh: true,
-        plugins: ['chatter']
+        plugins: ['chatter'],
+        onRefresh: function(newOauth, oldOauth, cb) {
+            console.log(newOauth, oldOauth);
+
+            //User.findOne({ 'sfdc.access_token': oldOauth},function(err, user){});
+            cb();
+        }
     });
 }
 
@@ -43,30 +49,48 @@ SFDCWorker.prototype.soql = function(user, slackData, cb) {
         oauth: user.sfdc,
         query: slackData.text
     }, function(e, c) {
-        //console.log(c);
-        var att = [];
+        if (e) {
+            var msg = (e.message || e);
 
-        _.forEach(c.records, function(r) {
-            console.log(r);
-            var a = {
-                'pretext': r.attributes.type,
-                'title': r.attributes.type,
-                'mrkdwn_in': ['text', 'pretext']
-            };
+            if (e.errorCode === 'INVALID_SESSION_ID') {
+                msg += ' Please auth. ' + config.APPURL + '/sfdc/oauth'
+            }
 
-            _.mapKeys(r._fields, function(v, k) {
-                a.text = '*' + k + '*: ' + v + '\n' + a.text;
-                //                a.fallback = k + ': ' + v;
+            cb(msg, {
+                channel_id: user.slack.id
+            });
+        } else {
+            var att = [];
+
+            _.forEach(c.records, function(r) {
+                var id = _.last(_.split(r.getUrl(), '/'));
+
+                var a = {
+                    'title_link': user.sfdc.instance_url + '/' + id,
+                    'title': r.getType(),
+                    'mrkdwn_in': ['text', 'pretext'],
+                    'fields': []
+                };
+
+                _.mapKeys(r._fields, function(v, k) {
+                    console.log(k, v);
+                    //CWD-- TODO: support referential fields via attributes
+                    a.fields[a.fields.length] = {
+                        title: k,
+                        value: v
+                    };
+                });
+
+                att[att.length] = a;
             });
 
-            att[att.length] = a;
-        });
+            cb(e, {
+                channel_id: slackData.channel_id, //user.slack.id,
+                msg: slackData.text,
+                attachments: JSON.stringify(att)
+            });
+        }
 
-        cb(e, {
-            channel_id: user.slack.id,
-            msg: slackData.text,
-            attachments: JSON.stringify(att)
-        })
     });
 }
 
@@ -93,10 +117,28 @@ SFDCWorker.prototype.case = function(user, slackData, cb) {
     caseObj.set('Description', slackData.text);
 
     console.log('creating  case with ' + slackData.text);
+    var userId = _.last(_.split(user.sfdc.id, '/'));
+    /*
+        self.org.query({
+            oauth: user.sfdc,
+            query: "SELECT Id FROM Contact WHERE email=User. '"+userId+"'"
+        }, function(e, c) {
+
+        });
+    */
     self.org.insert({
         sobject: caseObj,
         oauth: user.sfdc
-    }, cb);
+    }, function(err, record) {
+        console.log(err, record);
+        if (err || !record.success) {
+            cb(err, record);
+        } else {
+            slackData.text = "SELECT Id, Description,Status FROM Case WHERE Id='" +
+                record.id + "'";
+            self.soql(user, slackData, cb);
+        }
+    });
 }
 
 SFDCWorker.prototype.identity = function(user, slackData, cb) {

@@ -15,7 +15,11 @@ var org = nforce.createConnection({
 	apiVersion: 'v35.0', // optional, defaults to current salesforce API version
 	environment: 'production', // optional, salesforce 'sandbox' or 'production', production default
 	mode: 'multi', // optional, 'single' or 'multi' user mode, multi default
-	autoRefresh: true
+	autoRefresh: true,
+	onRefresh: function(newOauth, oldOauth, cb) {
+		console.log(newOauth, oldOauth);
+		cb();
+	}
 });
 
 router.get('/oauth', function(req, res) {
@@ -34,6 +38,7 @@ router.get('/oauth_callback', function(req, res) {
 		code: req.query.code
 	}, function(err, resp) {
 		if (!err) {
+			console.log(resp);
 			console.log('Access Token: ' + resp.access_token);
 			console.log('saving for user: ', req.session.userId)
 				//save SFDC details to user here
