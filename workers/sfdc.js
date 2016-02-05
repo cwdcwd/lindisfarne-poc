@@ -29,15 +29,37 @@ SFDCWorker.prototype.chatter = function(user, slackData, cb) {
     var self = this;
     var id = _.last(_.split(user.sfdc.id, '/'));
     console.log('posting to ' + id + ' with ' + slackData.text);
+
     self.org.chatter.postFeedItem({
         oauth: user.sfdc,
         id: id,
         text: slackData.text
     }, function(e, c) {
-        cb(e, {
-            channel_id: user.slack.id,
-            msg: c
-        })
+        if (e) {
+            var msg = (e.message || e);
+
+            if (e.errorCode === 'INVALID_SESSION_ID') {
+                msg += ' Please auth. ' + config.APPURL + '/sfdc/oauth'
+            }
+
+            cb(msg, {
+                channel_id: user.slack.id,
+            });
+        } else {
+            var att = [];
+            att[0] = {
+                'title_link': user.sfdc.instance_url + '/' + c.id,
+                'title': 'Chatter post made!',
+                'mrkdwn_in': ['text', 'pretext'],
+                'fields': []
+            };
+
+            cb(e, {
+                //channel_id: user.slack.id,
+                msg: 'Chatter post made!',
+                attachments: JSON.stringify(att)
+            });
+        }
     });
 }
 
