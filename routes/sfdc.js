@@ -11,7 +11,7 @@ var nforce = require('nforce');
 var org = nforce.createConnection({
 	clientId: config.SFDC_KEY,
 	clientSecret: config.SFDC_SECRET,
-	redirectUri: 'http://localhost:3000/sfdc/oauth_callback',
+	redirectUri: config.APPURL + '/sfdc/oauth_callback',
 	apiVersion: 'v35.0', // optional, defaults to current salesforce API version
 	environment: 'production', // optional, salesforce 'sandbox' or 'production', production default
 	mode: 'multi', // optional, 'single' or 'multi' user mode, multi default

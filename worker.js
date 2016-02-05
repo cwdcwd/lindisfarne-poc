@@ -101,7 +101,7 @@ queue.process('slackpost', function(job, done) {
 
     cmd.processor(jobData, function(err, data) {
         var payload = { //CWD-- TODO : rework all this to dynamicaly goto channel or DM based on processor
-            token: config.SLACKBOT_TOKEN,
+            token: jobData.token, //config.SLACKBOT_TOKEN,
             channel: (data && data.channel_id) || jobData.channel_id,
             text: JSON.stringify(err || data.msg || data),
             attachments: (data && data.attachments) || null,
