@@ -18,6 +18,8 @@ config.SFDC_KEY = process.env.SFDC_KEY || '';
 config.SFDC_SECRET = process.env.SFDC_SECRET || '';
 config.SLACK_KEY = process.env.SLACK_KEY || '';
 config.SLACK_SECRET = process.env.SLACK_SECRET || '';
+config.SLACK_API_BASEURL = 'https://slack.com/api/';
+
 
 config.ZENDESK_USER = process.env.ZENDESK_USER || '';
 config.ZENDESK_USERTOKEN = process.env.ZENDESK_USERTOKEN || '';
