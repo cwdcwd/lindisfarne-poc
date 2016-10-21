@@ -18,6 +18,13 @@ config.SFDC_KEY = process.env.SFDC_KEY || '';
 config.SFDC_SECRET = process.env.SFDC_SECRET || '';
 config.SLACK_KEY = process.env.SLACK_KEY || '';
 config.SLACK_SECRET = process.env.SLACK_SECRET || '';
+config.SLACK_API_BASEURL = 'https://slack.com/api/';
+
+
+config.ZENDESK_USER = process.env.ZENDESK_USER || '';
+config.ZENDESK_USERTOKEN = process.env.ZENDESK_USERTOKEN || '';
+config.ZENDESK_BASEURL = 'https://topcoder.zendesk.com/api/v2/';
+config.ZENDESK_TICKETSURL = config.ZENDESK_BASEURL + 'tickets.json';
 
 config.db = (process.env.MONGOLAB_URI || ('mongodb://' + (process.env.DB_PORT_27017_TCP_ADDR || 'localhost') +
     '/lindisfarne'));

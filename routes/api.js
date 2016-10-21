@@ -10,9 +10,7 @@ var queue = kue.createQueue({
 });
 
 
-/* GET home page. */
-router.get('/', function(req, res, next) {
-    var payload = req.query;
+var fCreateJob = function(payload) {
     console.log(payload);
     payload.receivedDate = new Date();
     var job = queue.create('slackpost', payload).removeOnComplete(true).save(function(err) {
@@ -27,6 +25,21 @@ router.get('/', function(req, res, next) {
     job.on('complete', function(result) {
         console.log('job done!', result);
     });
+}
+
+/* GET home page. */
+router.get('/', function(req, res, next) {
+    var payload = req.query;
+    fCreateJob(payload);
+
+    res.json({
+        text: 'message received' + new Date()
+    });
+});
+
+router.post('/', function(req, res, next) {
+    var payload = req.body;
+    fCreateJob(payload);
 
     res.json({
         text: 'message received' + new Date()

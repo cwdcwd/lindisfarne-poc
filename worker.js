@@ -5,6 +5,7 @@ var config = require('config');
 var kue = require('kue');
 var GarageBaerWorker = require('./workers/garagebaer');
 var SFDCWorker = require('./workers/sfdc');
+var ZDWorker = require('./workers/zendesk');
 
 var mongoose = require('mongoose');
 var User = require('./model/User.js');
@@ -46,48 +47,56 @@ var normalizeWhitelist = function(wl) {
 var baer = new GarageBaerWorker(config.PHOTON_USERNAME, config.PHOTON_PASSWORD, config.PHOTON_DEVICEID,
     normalizeWhitelist(config.WHITELIST));
 var sfdc = new SFDCWorker();
+var zd = new ZDWorker();
+
 var request = require('request');
 var qs = require('querystring');
 var queue = kue.createQueue({
     redis: config.REDIS_URL
 });
 
+var cmdMap = [{
+    command: '/garagebaer',
+    processor: function(jd, cb) {
+        baer.process(jd, cb);
+    }
+}, {
+    command: '/lindisfarne',
+    processor: function(data, cb) {
+        cb(null, data);
+    }
+}, {
+    command: '/soql',
+    processor: function(jd, cb) {
+        sfdc.process(jd, cb);
+    }
+}, {
+    command: '/chatter',
+    processor: function(jd, cb) {
+        sfdc.process(jd, cb);
+    }
+}, {
+    command: '/case',
+    processor: function(jd, cb) {
+        sfdc.process(jd, cb);
+    }
+}, {
+    command: '/timecard',
+    processor: function(jd, cb) {
+        sfdc.process(jd, cb);
+    }
+}, {
+    command: '/ticket',
+    processor: function(jd, cb) {
+        zd.process(jd, cb);
+    }
+}];
+
 queue.process('slackpost', function(job, done) {
     var jobData = job.data;
     jobData.processedDate = new Date();
     console.log(jobData);
-
-    var cmdMap = [{
-        command: '/garagebaer',
-        processor: function(jd, cb) {
-            baer.process(jd, cb);
-        }
-    }, {
-        command: '/lindisfarne',
-        processor: function(data, cb) {
-            cb(null, data);
-        }
-    }, {
-        command: '/soql',
-        processor: function(jd, cb) {
-            sfdc.process(jd, cb);
-        }
-    }, {
-        command: '/chatter',
-        processor: function(jd, cb) {
-            sfdc.process(jd, cb);
-        }
-    }, {
-        command: '/case',
-        processor: function(jd, cb) {
-            sfdc.process(jd, cb);
-        }
-    }, {
-        command: '/timecard',
-        processor: function(jd, cb) {
-            sfdc.process(jd, cb);
-        }
-    }];
+    console.log('looking to process: ', jobData.command);
 
     var cmd = _.find(cmdMap, {
         command: jobData.command
@@ -107,7 +116,7 @@ queue.process('slackpost', function(job, done) {
             attachments: (data && data.attachments) || null,
             username: config.BOTNAME
         };
-
+        console.log(payload);
         request({
             method: 'POST',
             url: 'https://slack.com/api/chat.postMessage',
